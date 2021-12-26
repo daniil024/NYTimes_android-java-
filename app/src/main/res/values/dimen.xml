@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="news_item_height">115dp</dimen>
+    <dimen name="news_item_category_height">20dp</dimen>
+    <dimen name="news_item_date_height">5dp</dimen>
+    <dimen name="news_item_main_info_height">100dp</dimen>
+    <dimen name="item_image_height">110dp</dimen>
+    <dimen name="item_image_width">140dp</dimen>
+</resources>
