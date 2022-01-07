@@ -26,6 +26,6 @@
     </style>
 
 <!--    <style name="Text.Secondary">-->
-<!--        <item name="android:textColor">@color/gray_dove_light</item>-->
+<!--        <item name="android:textColor">#hexColorForTextViews</item>-->
 <!--    </style>-->
 </resources>

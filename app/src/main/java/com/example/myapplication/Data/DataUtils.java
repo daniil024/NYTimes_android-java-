@@ -1,13 +1,34 @@
 package com.example.myapplication.Data;
 
+import android.accounts.NetworkErrorException;
+import android.util.Log;
+
+import com.example.myapplication.Utils.Utils;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+
 public class DataUtils {
 
-    public static List<NewsItem> generateNews() {
+    private static final String TAG = DataUtils.class.getSimpleName();
+
+    public static List<NewsItem> generateNews() throws NetworkErrorException {
+
+        // I added this delay to imitate long loading process
+        try {
+            Thread.sleep(3000);
+        } catch (Exception e) {
+            if (Utils.isDebug()) Log.e(TAG, e.getMessage(), e);
+        }
+
+        // Check that method runs not on the main thread
+        Log.i(TAG, "current thread = "+Thread.currentThread());
+
         final Category darwinAwards = new Category(1, "Darwin Awards");
         final Category criminal = new Category(2, "Criminal");
         final Category animals = new Category(3, "Animals");
@@ -49,7 +70,7 @@ public class DataUtils {
                         + "Stephen Doucette.\n\n"
                         + "A social media search for locations like Eaton Canyon, Hermit Falls and Malibu Creek Rock Pool reveal "
                         + "dozens of risky selfie videos. Two men were recently rescued after being injured while being filmed at "
-                        + "Hermit Falls.\n\n"+"Daredevils attempting dangerous cliff dives in a quest for likes has led to an increase in costly helicopter "
+                        + "Hermit Falls.\n\n" + "Daredevils attempting dangerous cliff dives in a quest for likes has led to an increase in costly helicopter "
                         + "airlifts in California, police say.\n\n"
                         + "As young people pursue the perfect selfie or video for their social media pages, the Los Angeles County "
                         + "Sheriff's Department says it is spending hundreds of thousands of dollars plucking the injured and "
@@ -142,6 +163,19 @@ public class DataUtils {
         ));
 
         return news;
+    }
+
+    public static Single<List<NewsItem>> observeNews() {
+        return Single.create(emitter -> {
+            try {
+                List<NewsItem> news = generateNews();
+                emitter.onSuccess(news);
+            } catch (NetworkErrorException e) {
+                if (!emitter.tryOnError(e) && Utils.isDebug())
+                    Log.e(TAG, "observeNews error handler caught an error", e);
+            }
+
+        });
     }
 
     private static Date createDate(int year, int month, int date, int hrs, int min) {

@@ -11,4 +11,7 @@
     <string name="full_photo">full_photo</string>
     <string name="title_details">title_details</string>
     <string name="preview_photo">preview_photo</string>
+    <string name="retry_action">Retry</string>
+    <string name="error_message">Loading news was unsuccessful</string>
+    <string name="content_desc_default" translatable="false">Decoration</string>
 </resources>
