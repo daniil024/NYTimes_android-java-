@@ -27,7 +27,7 @@ public class DataUtils {
         }
 
         // Check that method runs not on the main thread
-        Log.i(TAG, "current thread = "+Thread.currentThread());
+        Log.i(TAG, "current thread = " + Thread.currentThread());
 
         final Category darwinAwards = new Category(1, "Darwin Awards");
         final Category criminal = new Category(2, "Criminal");
@@ -165,6 +165,25 @@ public class DataUtils {
         return news;
     }
 
+    /*
+    Method with Observable type of Observable
+     */
+    public static Observable<List<NewsItem>> observeNewsObs() {
+        return Observable.create(emitter -> {
+            try {
+                List<NewsItem> news = generateNews();
+                emitter.onNext(news);
+                emitter.onComplete();
+            } catch (NetworkErrorException e) {
+                if (!emitter.tryOnError(e) && Utils.isDebug())
+                    Log.e(TAG, "observeNews error handler caught an error", e);
+            }
+        });
+    }
+
+    /*
+    Method with Single type of Observable
+     */
     public static Single<List<NewsItem>> observeNews() {
         return Single.create(emitter -> {
             try {
@@ -174,7 +193,6 @@ public class DataUtils {
                 if (!emitter.tryOnError(e) && Utils.isDebug())
                     Log.e(TAG, "observeNews error handler caught an error", e);
             }
-
         });
     }
 
