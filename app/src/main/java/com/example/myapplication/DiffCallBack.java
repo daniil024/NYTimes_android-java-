@@ -2,16 +2,17 @@ package com.example.myapplication;
 
 import androidx.recyclerview.widget.DiffUtil;
 
+import com.example.myapplication.DTOData.GifDTO;
 import com.example.myapplication.Data.NewsItem;
 
 import java.util.List;
 
 public class DiffCallBack extends DiffUtil.Callback {
 
-    private final List<NewsItem> oldItems;
-    private final List<NewsItem> newItems;
+    private final List<GifDTO> oldItems;
+    private final List<GifDTO> newItems;
 
-    public DiffCallBack(List<NewsItem> oldItems, List<NewsItem> newItems) {
+    public DiffCallBack(List<GifDTO> oldItems, List<GifDTO> newItems) {
         this.oldItems = oldItems;
         this.newItems = newItems;
     }

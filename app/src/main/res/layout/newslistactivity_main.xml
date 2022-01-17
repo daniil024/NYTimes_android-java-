@@ -17,10 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingTop="4dp"
-        android:paddingBottom="8dp"
         tools:context=".NewsListActivity"
-        tools:listitem="@layout/newsitem" />
+        tools:listitem="@layout/gifitem" />
 
     <include
         android:id="@+id/error_layout"

@@ -40,23 +40,4 @@ public class NewsDetailsActivity extends AppCompatActivity {
         onBackPressed();
         return true;
     }
-
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        if (item.getItemId() == android.R.id.home) {
-//            this.finish();
-//            //onBackPressed();
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
 }
