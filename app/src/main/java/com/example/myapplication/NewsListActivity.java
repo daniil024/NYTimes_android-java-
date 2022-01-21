@@ -1,80 +1,81 @@
 package com.example.myapplication;
 
-import android.accounts.NetworkErrorException;
-import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.UiThread;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.myapplication.Data.DataUtils;
 import com.example.myapplication.Data.NewsItem;
-import com.example.myapplication.Utils.Utils;
+import com.example.myapplication.adapter.recycler.NYTimesRecyclerAdapter;
+import com.example.myapplication.adapter.recycler.NewsItemDecoration;
+import com.example.myapplication.adapter.spinner.CategoriesSpinnerAdapter;
+import com.example.myapplication.network.RestApi;
+import com.example.myapplication.network.endpoints.TopStoriesEndpoint;
+import com.example.myapplication.network.models.NewsCategory;
+import com.example.myapplication.network.models.dto.TopStoriesResponse;
+import com.example.myapplication.utils.Utils;
 
 import java.util.List;
 
 import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.core.Scheduler;
-import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class NewsListActivity extends AppCompatActivity {
 
     private final static String TAG = NewsListActivity.class.getSimpleName();
 
-    private List<NewsItem> data;
+    @Nullable
+    private Toolbar toolbar;
+    @Nullable
     private ProgressBar progressBar;
+    @Nullable
     private View error;
+    @Nullable
     private Button errorAction;
+    @Nullable
     private RecyclerView recycler;
-    private NYTimesRecyclerAdapter adapter;
-    private Disposable disposable;
+    @Nullable
+    private Spinner spinnerCategories;
+
+    private NYTimesRecyclerAdapter newsAdapter;
+    private CategoriesSpinnerAdapter categoriesAdapter;
+
+    @Nullable
+    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.newslistactivity_main);
-
-        error = findViewById(R.id.error_layout);
-        errorAction = findViewById(R.id.error_action_button);
-        errorAction.setOnClickListener(view -> loadItems());
-
-        progressBar = findViewById(R.id.progress_bar);
-        recycler = findViewById(R.id.recycler_view);
-        adapter = new NYTimesRecyclerAdapter(this,
-                item -> NewsDetailsExtendedActivity.start(this, item));
-        recycler.setAdapter(adapter);
-
-        if (getResources().getConfiguration().orientation == ORIENTATION_LANDSCAPE) {
-            final int columnCount = getResources().getInteger(R.integer.landscape_news_columns_count);
-            recycler.setLayoutManager(new GridLayoutManager(this, columnCount));
-        } else
-            recycler.setLayoutManager(new LinearLayoutManager(this));
-
-        // TODO: do the app with: thread+handler, rxjava, runOnUiThread
+        setUpUI();
+        setUpUX();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        loadItems();
+        loadItems(categoriesAdapter.getSelectedCategory().serverValue());
     }
 
     @Override
@@ -83,40 +84,50 @@ public class NewsListActivity extends AppCompatActivity {
         Utils.setViewVisibility(recycler, true);
         Utils.setViewVisibility(progressBar, false);
         Utils.setViewVisibility(error, true);
-
-        Utils.disposeSafe(disposable);
-        disposable = null;
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        adapter = null;
-        recycler = null;
-        progressBar = null;
     }
 
 
     /*
-        Load items to recyclerView with RXJava
-    */
-    private void loadItems() {
+    Load items to recyclerView with RXJava
+     */
+    private void loadItems(@NonNull String category) {
         Utils.setViewVisibility(progressBar, true);
         Utils.setViewVisibility(recycler, false);
         Utils.setViewVisibility(error, false);
 
-        // My guess: I used here another method (observeNews), because when u transmit
-        // generateNews in fromArray it runs synchronously,
-        // because fromArray doesn't support async running, it just gets array
-        disposable = DataUtils.observeNews()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                // References to the methods which will be executed while onNext, onError, onCompleted done
-                .subscribe(this::updateItems, this::handleError);
+        Call<TopStoriesResponse> searchRequest;
+        searchRequest = RestApi.getInstance()
+                .getTopStoriesByCall().getByCall(category);
+
+        searchRequest.enqueue(new Callback<TopStoriesResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<TopStoriesResponse> call,
+                                   @NonNull Response<TopStoriesResponse> response) {
+                if (response.body() != null)
+                    updateItems(TopStoriesMapper.map(response.body().getNews()));
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<TopStoriesResponse> call,
+                                  @NonNull Throwable t) {
+                handleError(t);
+            }
+        });
+
+//        if (compositeDisposable != null)
+//            compositeDisposable.add(RestApi.getInstance()
+//                    .getTopStories()
+//                    .get(category)
+//                    .map(response -> TopStoriesMapper.map(response.getNews()))
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(this::updateItems, this::handleError));
     }
 
     private void updateItems(@Nullable List<NewsItem> news) {
-        if (adapter != null) adapter.replaceData(news);
+        if (newsAdapter != null && news != null) {
+            newsAdapter.replaceData(news);
+        }
 
         Utils.setViewVisibility(recycler, true);
         Utils.setViewVisibility(progressBar, false);
@@ -130,5 +141,69 @@ public class NewsListActivity extends AppCompatActivity {
         Utils.setViewVisibility(error, true);
         Utils.setViewVisibility(recycler, false);
         Utils.setViewVisibility(progressBar, false);
+    }
+
+
+    private void setUpRecyclerViewAdapter() {
+        newsAdapter = new NYTimesRecyclerAdapter(this,
+                item -> NewsDetailsActivity.start(this, item), Glide.with(this));
+        if (recycler != null) {
+            recycler.setAdapter(newsAdapter);
+            //recycler.addItemDecoration(new NewsItemDecoration(getResources().getDimensionPixelSize(R.dimen.spacing_micro)));
+            if (getResources().getConfiguration().orientation == ORIENTATION_LANDSCAPE) {
+                final int column_count = R.integer.landscape_news_columns_count;
+                recycler.setLayoutManager(new GridLayoutManager(this, column_count));
+            } else
+                recycler.setLayoutManager(new LinearLayoutManager(this));
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (compositeDisposable != null)
+            compositeDisposable.clear();
+
+        categoriesAdapter = null;
+        newsAdapter = null;
+        recycler = null;
+        toolbar = null;
+        progressBar = null;
+        errorAction = null;
+        error = null;
+        spinnerCategories = null;
+    }
+
+    private void findViews() {
+        toolbar = findViewById(R.id.main_toolbar);
+        progressBar = findViewById(R.id.progress_bar);
+        error = findViewById(R.id.error_layout);
+        errorAction = findViewById(R.id.error_action_button);
+        spinnerCategories = findViewById(R.id.spinner_categories);
+        recycler = findViewById(R.id.recycler_view);
+    }
+
+    private void setUpUI() {
+        findViews();
+        setUpRecyclerViewAdapter();
+        final NewsCategory[] categories = NewsCategory.values();
+        categoriesAdapter = CategoriesSpinnerAdapter.createDefault(this, categories);
+        if (spinnerCategories != null)
+            spinnerCategories.setAdapter(categoriesAdapter);
+    }
+
+    private void setUpUX() {
+        if (errorAction != null)
+            errorAction.setOnClickListener(view ->
+                    loadItems(categoriesAdapter.getSelectedCategory().serverValue()));
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        }
+        if (spinnerCategories != null)
+            categoriesAdapter.setOnCategorySelectedListener(
+                    category -> loadItems(category.serverValue()),
+                    spinnerCategories);
     }
 }

@@ -24,19 +24,13 @@ public class NewsDetailsExtendedActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // For Parcelable type of objects
-        //Bundle data = getIntent().getExtras();
-        //NewsItem item = data.getParcelable("extra:newsItem");
-        //setTitle(item.getCategory().getName());
-
-        // For Serializable types of objects
         NewsItem item = (NewsItem) getIntent().getSerializableExtra(EXTRA_NEWS_ITEM);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.news_details_screen_collapsed);
 
         CollapsingToolbarLayout collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
-        collapsingToolbarLayout.setTitle(item.getCategory().getName());
+        collapsingToolbarLayout.setTitle(item.getCategory());
         Toolbar toolbar = findViewById(R.id.extended_toolbar);
 
         Glide.with(getApplicationContext()).load(item.getImageUrl()).into((ImageView) findViewById(R.id.toolbar_img));
@@ -57,11 +51,4 @@ public class NewsDetailsExtendedActivity extends AppCompatActivity {
                         .putExtra(EXTRA_NEWS_ITEM, item)
         );
     }
-
-      // For supportActionBar onBackPressed
-//    @Override
-//    public boolean onSupportNavigateUp() {
-//        onBackPressed();
-//        return true;
-//    }
 }

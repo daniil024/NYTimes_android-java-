@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.adapter.recycler;
 
 import androidx.recyclerview.widget.DiffUtil;
 
