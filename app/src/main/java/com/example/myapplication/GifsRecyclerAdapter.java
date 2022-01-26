@@ -41,7 +41,7 @@ public class GifsRecyclerAdapter extends RecyclerView.Adapter<GifsRecyclerAdapte
 
         final RequestOptions imageOption = new RequestOptions()
                 .centerCrop();
-        requestManager.applyDefaultRequestOptions(imageOption);
+        this.requestManager.applyDefaultRequestOptions(imageOption);
 
     }
 
