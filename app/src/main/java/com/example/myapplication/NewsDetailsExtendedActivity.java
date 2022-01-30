@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
-import com.example.myapplication.Data.NewsItem;
+import com.example.myapplication.data.NewsItem;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 
 import org.ocpsoft.prettytime.PrettyTime;

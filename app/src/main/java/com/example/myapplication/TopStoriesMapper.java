@@ -3,7 +3,7 @@ package com.example.myapplication;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.myapplication.Data.NewsItem;
+import com.example.myapplication.data.NewsItem;
 import com.example.myapplication.network.models.dto.ArticleDTO;
 import com.example.myapplication.network.models.dto.MultimediaDTO;
 

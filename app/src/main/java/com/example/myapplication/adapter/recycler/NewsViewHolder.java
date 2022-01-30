@@ -6,10 +6,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.RequestManager;
-import com.example.myapplication.Data.NewsItem;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
+import com.example.myapplication.data.NewsItem;
 import com.example.myapplication.R;
 import com.example.myapplication.utils.Utils;
 
@@ -24,13 +27,14 @@ public class NewsViewHolder extends RecyclerView.ViewHolder {
     public final ImageView photo;
     public final TextView time;
 
-    public static NewsViewHolder create(LayoutInflater inflater, ViewGroup parent,
+    public static NewsViewHolder create(@NonNull ViewGroup parent,
                                         RequestManager imageLoader) {
-        View view = inflater.inflate(LAYOUT, parent, false);
+        final View view = LayoutInflater.from(parent.getContext())
+                .inflate(LAYOUT, parent, false);
         return new NewsViewHolder(view, imageLoader);
     }
 
-    private NewsViewHolder(View itemView, RequestManager imageLoader) {
+    private NewsViewHolder(@NonNull View itemView, RequestManager imageLoader) {
         super(itemView);
         this.imageLoader = imageLoader;
         category = itemView.findViewById(R.id.category);
@@ -50,7 +54,11 @@ public class NewsViewHolder extends RecyclerView.ViewHolder {
         category.setText(item.getCategory());
         title.setText(item.getTitle());
         description.setText(item.getPreviewText());
-        imageLoader.load(item.getImageUrl()).into(photo);
-        time.setText(Utils.formatDateTime(itemView.getContext(), item.getPublishDate()));
+        imageLoader.load(item.getImageUrl())
+                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.AUTOMATIC))
+                .thumbnail(0.3f)
+                .into(photo);
+        if (item.getPublishDate() != null)
+            time.setText(Utils.formatDateTime(itemView.getContext(), item.getPublishDate()));
     }
 }

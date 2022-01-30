@@ -86,20 +86,11 @@ public class CategoriesSpinnerAdapter extends ArrayAdapter<NewsCategory> {
         return convertView;
     }
 
-    public void setOnCategorySelectedListener(@Nullable OnCategorySelectedListener categorySelectedListener,
-                                              @NonNull Spinner spinner) {
-        this.categorySelectedListener = categorySelectedListener;
-        if (categorySelectedListener == null) {
-            spinner.setOnItemSelectedListener(null);
-            return;
-        }
-
+    public void setOnCategorySelectedListener(@NonNull Spinner spinner) {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                final NewsCategory item = getItem(position);
-                CategoriesSpinnerAdapter.this.selectedCategory = item;
-                categorySelectedListener.onSelected(item);
+                CategoriesSpinnerAdapter.this.selectedCategory = getItem(position);
             }
 
             @Override

@@ -1,6 +1,5 @@
-package com.example.myapplication.Data;
+package com.example.myapplication.data;
 
-import android.accounts.NetworkErrorException;
 import android.util.Log;
 
 import com.example.myapplication.utils.Utils;

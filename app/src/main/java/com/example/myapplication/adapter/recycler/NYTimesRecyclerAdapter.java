@@ -1,20 +1,16 @@
 package com.example.myapplication.adapter.recycler;
 
 import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.myapplication.Data.NewsItem;
+import com.example.myapplication.data.NewsItem;
 import com.example.myapplication.R;
-import com.example.myapplication.adapter.recycler.DiffCallBack;
-import com.example.myapplication.adapter.recycler.NewsViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +18,12 @@ import java.util.List;
 public class NYTimesRecyclerAdapter extends RecyclerView.Adapter<NewsViewHolder> {
 
     private List<NewsItem> newsItems = new ArrayList<>();
-    private final LayoutInflater inflater;
     private final RequestManager imageLoader;
     private final OnNYTimesNewsListener listener;
 
     // Other realization for clickListener
-    public NYTimesRecyclerAdapter(Context context, OnNYTimesNewsListener listener, RequestManager imageLoader) {
-        inflater = LayoutInflater.from(context);
+    public NYTimesRecyclerAdapter(OnNYTimesNewsListener listener,
+                                  RequestManager imageLoader) {
         this.listener = listener;
         this.imageLoader = imageLoader;
 
@@ -52,7 +47,7 @@ public class NYTimesRecyclerAdapter extends RecyclerView.Adapter<NewsViewHolder>
     @NonNull
     @Override
     public NewsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return NewsViewHolder.create(inflater, parent, imageLoader);
+        return NewsViewHolder.create(parent, imageLoader);
     }
 
     @Override
@@ -72,6 +67,7 @@ public class NYTimesRecyclerAdapter extends RecyclerView.Adapter<NewsViewHolder>
         newsItems = newNewsItems;
         // Dispatch a proper set of notify* calls to RecyclerView
         diff.dispatchUpdatesTo(this);
+        notifyDataSetChanged();
     }
 
     public interface OnNYTimesNewsListener {

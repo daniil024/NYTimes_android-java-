@@ -1,7 +1,4 @@
-package com.example.myapplication.Data;
-
-import android.os.Parcel;
-import android.os.Parcelable;
+package com.example.myapplication.data;
 
 import java.io.Serializable;
 import java.util.Date;

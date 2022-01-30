@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,25 +17,27 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.RequestManager;
-import com.bumptech.glide.request.RequestOptions;
-import com.example.myapplication.Data.DataUtils;
-import com.example.myapplication.Data.NewsItem;
+import com.example.myapplication.data.NewsItem;
 import com.example.myapplication.adapter.recycler.NYTimesRecyclerAdapter;
-import com.example.myapplication.adapter.recycler.NewsItemDecoration;
 import com.example.myapplication.adapter.spinner.CategoriesSpinnerAdapter;
+import com.example.myapplication.database.AppDatabase;
+import com.example.myapplication.database.Converter2DBEntity;
+import com.example.myapplication.database.entites.NewsEntity;
 import com.example.myapplication.network.RestApi;
-import com.example.myapplication.network.endpoints.TopStoriesEndpoint;
 import com.example.myapplication.network.models.NewsCategory;
+import com.example.myapplication.network.models.dto.ArticleDTO;
 import com.example.myapplication.network.models.dto.TopStoriesResponse;
 import com.example.myapplication.utils.Utils;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,6 +60,8 @@ public class NewsListActivity extends AppCompatActivity {
     private RecyclerView recycler;
     @Nullable
     private Spinner spinnerCategories;
+    @Nullable
+    private FloatingActionButton floatingActionButton;
 
     private NYTimesRecyclerAdapter newsAdapter;
     private CategoriesSpinnerAdapter categoriesAdapter;
@@ -75,15 +80,16 @@ public class NewsListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        loadItems(categoriesAdapter.getSelectedCategory().serverValue());
+        // loadItems(categoriesAdapter.getSelectedCategory().serverValue());
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Utils.setViewVisibility(recycler, true);
+        Utils.setViewVisibility(floatingActionButton, true);
         Utils.setViewVisibility(progressBar, false);
-        Utils.setViewVisibility(error, true);
+        Utils.setViewVisibility(error, false);
     }
 
 
@@ -93,6 +99,7 @@ public class NewsListActivity extends AppCompatActivity {
     private void loadItems(@NonNull String category) {
         Utils.setViewVisibility(progressBar, true);
         Utils.setViewVisibility(recycler, false);
+        Utils.setViewVisibility(floatingActionButton, false);
         Utils.setViewVisibility(error, false);
 
         Call<TopStoriesResponse> searchRequest;
@@ -103,8 +110,13 @@ public class NewsListActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<TopStoriesResponse> call,
                                    @NonNull Response<TopStoriesResponse> response) {
-                if (response.body() != null)
-                    updateItems(TopStoriesMapper.map(response.body().getNews()));
+                List<ArticleDTO> news;
+                if (response.body() != null) {
+                    news = response.body().getNews();
+                    //updateItems(TopStoriesMapper.map(response.body().getNews()));
+                    Converter2DBEntity.toDatabase(NewsListActivity.this, news);
+                }
+                // при нажатии кнопки у нас данные дропаются в БД и потом ресайклер считывает из БД
             }
 
             @Override
@@ -114,22 +126,30 @@ public class NewsListActivity extends AppCompatActivity {
             }
         });
 
-//        if (compositeDisposable != null)
-//            compositeDisposable.add(RestApi.getInstance()
-//                    .getTopStories()
-//                    .get(category)
-//                    .map(response -> TopStoriesMapper.map(response.getNews()))
-//                    .subscribeOn(Schedulers.io())
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe(this::updateItems, this::handleError));
+        if (compositeDisposable != null) {
+            compositeDisposable.add(AppDatabase.getInstance(NewsListActivity.this).newsDao()
+                    //.getNewsByCategory(category)
+                    .getAll()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this::updateItems, this::handleError));
+        }
+
     }
 
-    private void updateItems(@Nullable List<NewsItem> news) {
+    private void updateItems(@Nullable List<NewsEntity> news) {
+
+        List<NewsItem> result = new ArrayList<>();
+        if (news != null) {
+            result = Converter2DBEntity.fromDatabase(news);
+        }
+
         if (newsAdapter != null && news != null) {
-            newsAdapter.replaceData(news);
+            newsAdapter.replaceData(result);
         }
 
         Utils.setViewVisibility(recycler, true);
+        Utils.setViewVisibility(floatingActionButton, true);
         Utils.setViewVisibility(progressBar, false);
         Utils.setViewVisibility(error, false);
     }
@@ -139,14 +159,15 @@ public class NewsListActivity extends AppCompatActivity {
             Log.e(TAG, th.getMessage(), th);
 
         Utils.setViewVisibility(error, true);
+        Utils.setViewVisibility(floatingActionButton, false);
         Utils.setViewVisibility(recycler, false);
         Utils.setViewVisibility(progressBar, false);
     }
 
 
     private void setUpRecyclerViewAdapter() {
-        newsAdapter = new NYTimesRecyclerAdapter(this,
-                item -> NewsDetailsActivity.start(this, item), Glide.with(this));
+        newsAdapter = new NYTimesRecyclerAdapter(
+                item -> DetailedWebViewActivity.start(this, item), Glide.with(this));
         if (recycler != null) {
             recycler.setAdapter(newsAdapter);
             //recycler.addItemDecoration(new NewsItemDecoration(getResources().getDimensionPixelSize(R.dimen.spacing_micro)));
@@ -182,6 +203,7 @@ public class NewsListActivity extends AppCompatActivity {
         errorAction = findViewById(R.id.error_action_button);
         spinnerCategories = findViewById(R.id.spinner_categories);
         recycler = findViewById(R.id.recycler_view);
+        floatingActionButton = findViewById(R.id.floating_action_button);
     }
 
     private void setUpUI() {
@@ -194,16 +216,22 @@ public class NewsListActivity extends AppCompatActivity {
     }
 
     private void setUpUX() {
-        if (errorAction != null)
-            errorAction.setOnClickListener(view ->
+        if (errorAction != null) {
+            errorAction.setOnClickListener(v ->
                     loadItems(categoriesAdapter.getSelectedCategory().serverValue()));
+        }
         if (toolbar != null) {
             setSupportActionBar(toolbar);
             toolbar.setNavigationOnClickListener(v -> onBackPressed());
         }
-        if (spinnerCategories != null)
-            categoriesAdapter.setOnCategorySelectedListener(
-                    category -> loadItems(category.serverValue()),
-                    spinnerCategories);
+        if (spinnerCategories != null) {
+            categoriesAdapter.setOnCategorySelectedListener(spinnerCategories);
+        }
+        if (floatingActionButton != null) {
+            floatingActionButton.setOnClickListener(
+                    v -> loadItems(categoriesAdapter
+                            .getSelectedCategory()
+                            .serverValue()));
+        }
     }
 }

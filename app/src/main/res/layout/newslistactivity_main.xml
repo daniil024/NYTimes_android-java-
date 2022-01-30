@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <androidx.appcompat.widget.Toolbar
@@ -30,7 +31,6 @@
             android:layout_height="70dp"
             android:layout_gravity="center" />
 
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
@@ -41,10 +41,25 @@
             tools:context=".NewsListActivity"
             tools:listitem="@layout/newsitem"/>
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/floating_action_button"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:contentDescription="@string/content_desc_default"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:foregroundTint="@color/white"
+            app:srcCompat = "@drawable/ic_plus"
+            app:rippleColor="@color/purple_500"
+            app:iconTint="@color/white"
+            />
+
         <include
             android:id="@+id/error_layout"
             layout="@layout/error_layout"
             android:visibility="gone" />
+
+
 
     </FrameLayout>
 </LinearLayout>

@@ -2,7 +2,7 @@ package com.example.myapplication.adapter.recycler;
 
 import androidx.recyclerview.widget.DiffUtil;
 
-import com.example.myapplication.Data.NewsItem;
+import com.example.myapplication.data.NewsItem;
 
 import java.util.List;
 

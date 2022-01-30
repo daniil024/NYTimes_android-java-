@@ -25,7 +25,8 @@
                 android:layout_weight="4"
                 android:adjustViewBounds="true"
                 android:contentDescription="@string/my_photo"
-                android:src="@drawable/daniel" />
+                android:src="@drawable/daniel"
+                android:scaleType="fitXY"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
